@@ -1,7 +1,7 @@
 /*
-*  Filename:      DecimalToBinary16.c
+*  Filename:      DecimalToBinary.c
 *  Author:        Connor Baker
-*  Version:       0.1b
+*  Version:       0.1c
 *  Date Created:  January 20, 2016
 *  Last Edited:   January 21, 2016
 *  Description:   Convert a decimal entered by user into its binary
@@ -25,9 +25,9 @@ unsigned int tempRemainder; // Holds the temporary remainder
 *  all of our possible remainders.
 */
 const char *LUT[16] = {"0000","0001","0010","0011",
-                      "0100","0101","0110","0111",
-                      "1000","1001","1010","1011",
-                      "1100","1101","1110","1111"};
+                       "0100","0101","0110","0111",
+                       "1000","1001","1010","1011",
+                       "1100","1101","1110","1111"};
 
 // Create our stack/linked list
 struct node {
