@@ -1,19 +1,27 @@
 // Author: Connor Baker
 // Created: November 14, 2017
-// Version: 0.1b
+// Version: 0.1c
 
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <gmp.h>
 
-#define DECIMAL_ACCURACY 8192 // Todo: Set this value at runtime
+// We should be able to derive this value from the accuracy of the base inputted
+#define DECIMAL_ACCURACY 8192
 
 mpf_t numberToConvert;
 mpf_t desiredBase;
 int accuracy;
 //int DECIMAL_ACCURACY;
 char *heap;
+
+// Create a dictionary to pull from for any alphabet we need, up to base 36
+const char dictionary[] = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                           'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+                           'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
+                           'U', 'V', 'W', 'X', 'Y', 'Z'};
+
 
 
 void convertBaseToBase(char *heap) {
@@ -27,19 +35,24 @@ void convertBaseToBase(char *heap) {
 		wholePartOfProduct = (char) mpf_get_d(currentNumber);
 //		gmp_printf("i = %d \t current num is: %.Ff\n", i, currentNumber);
 //		gmp_printf("\t whole part is: %d\n", wholePartOfProduct);
-		heap[i] = (char) (wholePartOfProduct + '0');
-		mpf_sub_ui(currentNumber, currentNumber, (unsigned long) wholePartOfProduct);
+		heap[i] = dictionary[wholePartOfProduct];
+		mpf_sub_ui(currentNumber, currentNumber,
+		           (unsigned long) wholePartOfProduct);
 	}
 }
 
 
 int main(int argc, char *argv[]) {
+	// Check if the user put in enough arguments
 	if (argc != 4) {
-		printf("Example usage: ChangeOfBase numberToConvert desiredBase accuracy\n");
-		printf("This only works for numbers between 0 and 1, and bases between 1 and 10\n");
+		printf("Example usage: ChangeOfBase numberToConvert "
+				       "desiredBase accuracy\n");
+		printf("This only works for numbers between 0 and 1, "
+				       "and bases between 1 and 36\n");
 		return 0;
 	}
 
+	// Allocate memory for the string representation
 	heap = (char *) calloc((size_t) (accuracy + 3L), sizeof(char));
 
 	// Set values and print them to establish that the program is working as expected
@@ -52,8 +65,7 @@ int main(int argc, char *argv[]) {
 	accuracy = (int) strtol((const char *) argv[3], NULL, 10);
 	printf("accuracy: %d\n", accuracy);
 
-//	DECIMAL_ACCURACY = accuracy * 4;
-
+	// Create the string that represents the number in the new base
 	heap[0] = '0';
 	heap[1] = '.';
 	heap[accuracy+2] = '\0'; // No more trailing garbage
