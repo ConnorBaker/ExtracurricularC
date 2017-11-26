@@ -1,6 +1,6 @@
 // Author: Connor Baker
 // Created: November 14, 2017
-// Version: 0.1d
+// Version: 0.2a
 
 
 
@@ -8,7 +8,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <gmp.h>
-#include <math.h>
 
 
 
@@ -60,32 +59,77 @@ void convertFractionalPartBaseToBase(char *heap) {
 }
 
 
+unsigned long largestRemovableExponent(mpf_t num) {
+	unsigned long i = 0;
 
-//void convertWholePartBaseToBase(char *heap) {
-//	int floorOfBase = (int) mpf_get_d(desiredBase);
-//	mpf_t currentNumber = {}; // Stop the compiler complaining about initialization
-//	mpf_init2(currentNumber, DECIMAL_ACCURACY);
-//	mpf_set(currentNumber, numberToConvert);
-//
-//	mpf_t temp = {}; // Stop the compiler complaining about initialization
-//	mpf_init2(temp, DECIMAL_ACCURACY);
-//	mpf_set(temp, desiredBase);
-//
-//	// Continue while currentNumber is greater than 1
-//	int i = floorOfBase;
-//	int j = 0;
-//	while (mpf_cmp_si(currentNumber, 1) > 0) {
-//		while (mpf_cmp(currentNumber, mpf_pow_ui(temp, temp, temp)) > 0) {
-//			i++;
-//		}
-//	i = floorOfBase;
-//	j++;
-//	}
-//
-//
-//	// REWORK METHOD TO USE DIVISION INSTEAD. IT'S THE BEST WAY.
-//	mpf_set(numberToConvert, currentNumber);
-//}
+	mpf_t temp = {}; // Stop the compiler complaining about initialization
+	mpf_init2(temp, DECIMAL_ACCURACY);
+
+	mpf_pow_ui(temp, desiredBase, i);
+
+
+	while (mpf_cmp(num, temp) > 0) {
+		i++;
+		mpf_pow_ui(temp, desiredBase, i);
+	}
+
+	return (i-1);
+}
+
+unsigned long largestRemovableCoeff(mpf_t num, unsigned long exponent) {
+	unsigned long i = 0;
+
+	mpf_t temp = {}; // Stop the compiler complaining about initialization
+	mpf_init2(temp, DECIMAL_ACCURACY);
+
+	mpf_pow_ui(temp, desiredBase, exponent);
+	mpf_mul_ui(temp, temp, i);
+
+
+	while(mpf_cmp(num, temp) > 0) {
+		i++;
+		mpf_pow_ui(temp, desiredBase, exponent);
+		mpf_mul_ui(temp, temp, i);
+	}
+
+	return (i-1);
+}
+
+
+void convertWholePartBaseToBase(char *heap) {
+	mpf_t currentNumber = {}; // Stop the compiler complaining about initialization
+	mpf_init2(currentNumber, DECIMAL_ACCURACY);
+	mpf_set(currentNumber, numberToConvert);
+
+	mpf_t temp = {}; // Stop the compiler complaining about initialization
+	mpf_init2(temp, DECIMAL_ACCURACY);
+
+	unsigned long i, j, k = 0; // largest removeable base, coeff, and index
+
+
+
+	i = largestRemovableExponent(currentNumber);
+
+
+
+	j = largestRemovableCoeff(currentNumber, i);
+
+	mpf_pow_ui(temp, desiredBase, i);
+	mpf_mul_ui(temp, temp, j);
+
+	while (mpf_cmp_ui(currentNumber, 1) > 0) {
+		mpf_sub(currentNumber, currentNumber, temp);
+		heap[k] = dictionary[j];
+		k++;
+		i = largestRemovableExponent(currentNumber);
+		j = largestRemovableCoeff(currentNumber, i);
+		mpf_pow_ui(temp, desiredBase, i);
+		mpf_mul_ui(temp, temp, j);
+	}
+
+	// Pass the remainder over to our other method
+	mpf_set(numberToConvert, currentNumber);
+}
 
 
 int main(int argc, char **argv) {
@@ -93,7 +137,7 @@ int main(int argc, char **argv) {
 	if (argc != 4) {
 		printf("Example usage: ChangeOfBase numberToConvert "
 				       "desiredBase accuracy\n");
-		printf("This only works for numbers between 0 and 1, "
+		printf("This only works for positive numbers, "
 				       "and bases between 1 and 36\n");
 		return 0;
 	}
@@ -109,18 +153,16 @@ int main(int argc, char **argv) {
 	printf("accuracy: %d\n", accuracy);
 
 	// Allocate memory for the string that represents the number in the new base
-//	char *heapWhole = (char *) calloc((size_t) (accuracy + 1L), sizeof(char));
-//	heapWhole[0] = '\0'; // No more trailing garbage
-//	convertWholePartBaseToBase(heapWhole);
-//	printf("conversion is %s", heapWhole);
-
+	char *heapWhole = (char *) calloc((size_t) (accuracy + 1L), sizeof(char));
+	heapWhole[0] = '\0'; // No more trailing garbage
+	convertWholePartBaseToBase(heapWhole);
 
 	// Allocate memory for the string that represents the number in the new base
 	char *heapFractional = (char *) calloc((size_t) (accuracy + 1L),
 	                                       sizeof(char));
 	heapFractional[accuracy] = '\0'; // No more trailing garbage
 	convertFractionalPartBaseToBase(heapFractional);
-	printf("conversion is .%s\n", heapFractional);
+	printf("conversion is %s.%s\n", heapWhole, heapFractional);
 
 	return 0;
 }
