@@ -1,6 +1,6 @@
 // Author: Connor Baker
 // Created: November 14, 2017
-// Version: 0.2b
+// Version: 0.2c
 
 
 
@@ -12,7 +12,7 @@
 
 
 // We should be able to derive this value from the accuracy of the base inputted
-#define DECIMAL_ACCURACY 128
+#define DECIMAL_ACCURACY 32768
 
 
 
@@ -35,9 +35,9 @@ unsigned long funcOne(mpf_t num);
 
 unsigned long funcTwo(mpf_t num, unsigned long exponent);
 
-void convertFractionalPartBaseToBase(char *heap);
-
 void convertWholePartBaseToBase(char *heap);
+
+void convertFractionalPartBaseToBase(char *heap);
 
 int main(int argc, char *argv[]);
 
@@ -131,16 +131,25 @@ void convertWholePartBaseToBase(char *heap) {
 	mpf_init2(temp, DECIMAL_ACCURACY);
 
 	// Largest removable base and coefficient, and index
-	unsigned long i, j, k = 0;
+	unsigned long i = 0;
+	unsigned long iPrevious = 0;
+	unsigned long j = 0;
+	unsigned long k = 0;
 
-
-	while (mpf_cmp_ui(currentNumber, 1) > 0) {
+	while (mpf_cmp_ui(currentNumber, 1) >= 0) {
 		i = funcOne(currentNumber);
 		j = funcTwo(currentNumber, i);
 		mpf_pow_ui(temp, desiredBase, i);
 		mpf_mul_ui(temp, temp, j);
 		mpf_sub(currentNumber, currentNumber, temp);
+//		gmp_printf("currentNumber is %.Ff\n", currentNumber);
+		printf("i = %lu\tj = %lu\tk = %lu\n", i, j, k);
 		heap[k] = dictionary[j];
+//		while (i > 0L) {
+//			k++;
+//			heap[k] = '0';
+//			i--;
+//		}
 		k++;
 	}
 
