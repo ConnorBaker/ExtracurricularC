@@ -1,8 +1,10 @@
 // Author: Connor Baker
 // Created: November 14, 2017
-// Version: 0.2c
+// Version: 0.3a
 
-
+/* TODO: Determine at runtime the size of the whole part representation.
+ * Should be no larger than the first power of the base larger than the number.
+ */
 
 // Import headers
 #include <stdio.h>
@@ -131,26 +133,64 @@ void convertWholePartBaseToBase(char *heap) {
 	mpf_init2(temp, DECIMAL_ACCURACY);
 
 	// Largest removable base and coefficient, and index
-	unsigned long i = 0;
-	unsigned long iPrevious = 0;
-	unsigned long j = 0;
-	unsigned long k = 0;
+	unsigned long powerOfBase = 0;
+	unsigned long previousPow = 0;
+	unsigned long coeffOfPowerOfBase = 0;
+	unsigned long index = 0;
 
 	while (mpf_cmp_ui(currentNumber, 1) >= 0) {
-		i = funcOne(currentNumber);
-		j = funcTwo(currentNumber, i);
-		mpf_pow_ui(temp, desiredBase, i);
-		mpf_mul_ui(temp, temp, j);
+		// Update previousPow
+		previousPow = powerOfBase;
+
+		// Calculate the largest power of the base we can remove
+		powerOfBase = funcOne(currentNumber);
+
+		// Calculate the largest multiple of the exponentiated base we can remove
+		coeffOfPowerOfBase = funcTwo(currentNumber, powerOfBase);
+
+		// Debugging
+//		printf("powerOfBase = %lu\n", powerOfBase);
+//		printf("previousPow = %lu\n", previousPow);
+//		printf("coeffOfPowerOfBase = %lu\n", coeffOfPowerOfBase);
+//		printf("index = %lu\n", index);
+
+		// Catch the difference between the powers and fill with zeros
+		while (previousPow > (powerOfBase + 1L)) {
+//			printf("'0' at index %lu\n", index);
+			heap[index++] = '0';
+//			printf("index should be one greater now: %lu\n", index);
+			previousPow--;
+		}
+
+		// Debugging
+//		printf("End add zero loop\n");
+
+		// Take calculated number away from currentNumber
+		mpf_pow_ui(temp, desiredBase, powerOfBase);
+		mpf_mul_ui(temp, temp, coeffOfPowerOfBase);
 		mpf_sub(currentNumber, currentNumber, temp);
-//		gmp_printf("currentNumber is %.Ff\n", currentNumber);
-		printf("i = %lu\tj = %lu\tk = %lu\n", i, j, k);
-		heap[k] = dictionary[j];
-//		while (i > 0L) {
-//			k++;
-//			heap[k] = '0';
-//			i--;
-//		}
-		k++;
+
+		// Add the coefficient to the heap
+//		printf("'%lu' at index %lu\n", coeffOfPowerOfBase, index);
+		heap[index++] = dictionary[coeffOfPowerOfBase];
+//		printf("index should be one greater now: %lu\n", index);
+
+		// Debugging
+//		printf("End of main while loop\n");
+	}
+
+	// Catch the case that the number is very nearly a power of the base
+	// and add zeros to fill in the lower powers of the base that were skipped over.
+	// Ex: 16 in base two is 10000
+	// The main while loop only checks that we have some greater-than-zero part of
+	// the number left, so we don't get to loop through a second time to fill in the
+	// missing (which is indicated by the difference between powerOfBase and
+	// previousPow)
+	while (powerOfBase > 0L) {
+//		printf("'0' at index %lu\n", index);
+		heap[index++] = '0';
+//		printf("index should be one greater now: %lu\n", index);
+		powerOfBase--;
 	}
 
 	// Pass the remainder over to our other method
